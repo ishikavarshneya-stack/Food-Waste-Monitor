@@ -1,0 +1,46 @@
+#include <HX711.h>
+
+#define DT_PIN 6
+#define SCK_PIN 5
+
+HX711 scale;
+
+const long ZERO_OFFSET = -308204;
+const float COUNTS_PER_GRAM = 240.7;
+
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+
+  scale.begin(DT_PIN, SCK_PIN);
+
+  Serial.println("Load Cell Calibration");
+}
+
+void loop() {
+
+  long sum = 0;
+
+  // Average 20 readings
+  for (int i = 0; i < 20; i++) {
+    sum += scale.read();
+    delay(10);
+  }
+
+  long raw = sum / 20;
+
+  float weight = (raw - ZERO_OFFSET) / COUNTS_PER_GRAM;
+
+  // Remove small noise around zero
+  if (weight < 5 && weight > -5)
+    weight = 0;
+
+  Serial.print("Raw: ");
+  Serial.print(raw);
+
+  Serial.print("   Weight: ");
+  Serial.print(weight, 1);
+  Serial.println(" g");
+
+  delay(300);
+}
